@@ -1,40 +1,40 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lshapkin <lshapkin@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/18 20:02:52 by lshapkin          #+#    #+#             */
-/*   Updated: 2024/06/19 23:51:32 by lshapkin         ###   ########.fr       */
+/*   Created: 2024/06/19 18:57:07 by lshapkin          #+#    #+#             */
+/*   Updated: 2024/06/19 23:50:53 by lshapkin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 char    *get_next_line(int fd)
 {
     char *line;
     char *buffer;
-    static char *left_line;
+    static char *left_line[MAX_FD];
 
     buffer = malloc((BUFFER_SIZE + 1) * sizeof(char));
     if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, &line, 0) < 0)
     {
-        free(left_line);
+        free(left_line[fd]);
         free(buffer);
-        left_line = NULL;
+        left_line[fd] = NULL;
         buffer = NULL;
         return (NULL);
     }
     if (!buffer)
         return (NULL);
-    line = fill_line_buffer(fd, left_line, buffer);
+    line = fill_line_buffer(fd, left_line[fd], buffer);
     free (buffer);
     buffer = NULL;
     if (!line)
         return (NULL);
-    left_line = set_line(line);
+    left_line[fd] = set_line(line);
     return (line);    
 }
 
