@@ -6,7 +6,7 @@
 /*   By: lshapkin <lshapkin@student.42berlin.de>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:02:52 by lshapkin          #+#    #+#             */
-/*   Updated: 2024/06/19 11:48:05 by lshapkin         ###   ########.fr       */
+/*   Updated: 2024/06/19 17:09:38 by lshapkin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 #include <fcntl.h>
 
 #ifndef BUFFER_SIZE
-# define BUFFER_SIZE 10
+# define BUFFER_SIZE 1000
 # endif
 
 char    *get_next_line(int fd);
@@ -32,34 +32,50 @@ char    *get_next_line(int fd)
 {
     char *line;
     char *buffer;
-    char *left_line;
+    static char *left_line;
 
     if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, &line, 0) < 0)
+    {
+        free(left_line);
+        free(buffer);
+        left_line = NULL;
+        buffer = NULL;
         return (NULL);
-    buffer = malloc(BUFFER_SIZE * sizeof(char));
+    }
+    buffer = malloc((BUFFER_SIZE + 1) * sizeof(char));
     if (!buffer)
         return (NULL);
     line = fill_line_buffer(fd, left_line, buffer);
+    free (buffer);
     left_line = set_line(line);
     return (line);    
 }
 
 char *fill_line_buffer(int fd, char *left_line, char *buffer)
 {
-    char *n;
     char *left_line_copy;
     int check;
 
-    while (ft_strchr(left_line, '\n') == NULL)
+    check = 1;
+    while (check > 0)
     {
-        left_line_copy = ft_strdup(left_line);
-        left_line = malloc((ft_strlen(left_line_copy) + BUFFER_SIZE + 1) * sizeof(char*));
-        if (!left_line)
-            return(NULL);
         check = read(fd, buffer, BUFFER_SIZE);
-        if (check == 0)
+        if (check == -1)
+            return(NULL);
+        else if (check == 0)
             break;
-        left_line = ft_strjoin(left_line_copy, buffer);
+        else
+        {
+            buffer[check] = '\0';
+            if (left_line == NULL)
+                left_line = ft_strdup("");
+            left_line_copy = left_line;
+            left_line = ft_strjoin(left_line_copy, buffer);
+            free(left_line_copy);
+            left_line_copy = NULL;
+            if (ft_strchr(left_line, '\n') != 0)
+                break;
+        }
     }
     return (left_line);
 }
@@ -97,13 +113,16 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 
 char	*ft_strchr(char *s, int c)
 {
-	while ((*s != '\0') && (*s != c))
+    int i;
+
+    i = 0;
+	while ((s[i] != '\0') && (s[i] != c))
 	{
-		s++;
+		i++;
 	}
-	if (*s == c)
+	if (s[i] == c)
 	{
-		return ((char *)s);
+		return ((char *)s[i]);
 	}
 	return ((char*)NULL);
 }
@@ -173,6 +192,8 @@ int main (void)
     int fd;
 
     fd = open("text.txt", O_RDONLY);
+    printf("%s\n", get_next_line(fd));
+    printf("%s\n", get_next_line(fd));
     printf("%s\n", get_next_line(fd));
     printf("%s\n", get_next_line(fd));
     printf("%s\n", get_next_line(fd));
